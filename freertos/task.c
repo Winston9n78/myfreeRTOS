@@ -8,6 +8,12 @@ List_t pxReadyTasksLists[ configMAX_PRIORITIES ];
 
 TCB_t Task1TCB;
 TCB_t Task2TCB;
+extern TCB_t IdleTaskTCB;
+TaskHandle_t xIdleTaskHandle;
+
+void vApplicationGetIdleTaskMemory( TCB_t **ppxIdleTaskTCBBuffer,
+																		StackType_t **ppxIdleTaskStackBuffer,
+																		uint32_t *pulIdleTaskStackSize );
 
 static void prvInitialiseNewTask(	TaskFunction_t pxTaskCode,
 																	const char *const pcName,
@@ -103,10 +109,35 @@ void prvInitialiseTaskLists( void )
 
 }
 
+void prvIdleTask(void *p_arg){};
 
 /* 启动调度器 */
 void vTaskStartScheduler( void )
 {
+	
+/* ==创建空闲任务start== */
+	TCB_t *pxIdleTaskTCBBuffer = NULL;	/*用于指向空闲任务控制块*/
+	StackType_t *pxIdleTaskStackBuffer = NULL;/*用于空闲任务栈起始地址*/
+	uint32_t ulIdleTaskStackSize;
+	
+	vApplicationGetIdleTaskMemory(&pxIdleTaskTCBBuffer,
+																&pxIdleTaskStackBuffer,
+																&ulIdleTaskStackSize );
+	
+	xIdleTaskHandle = /* 任务句柄 */
+	xTaskCreateStatic((TaskFunction_t)prvIdleTask,		/*任务入口*/
+										(char *)"IDLE",								/*任务名称，字符串形式*/
+										(uint32_t)ulIdleTaskStackSize ,		/*任务栈大小，单位为字*/
+										(void *)NULL,										/*任务形参*/
+										(StackType_t *)pxIdleTaskStackBuffer,  		/*任务栈起始地址*/
+										(TCB_t *)&pxIdleTaskTCBBuffer ); 					/*任务控制块*/
+	/*将任务添加到就绪列表*/
+	vListInsertEnd( &( pxReadyTasksLists[0] ),
+										&(((TCB_t *)pxIdleTaskTCBBuffer)->xStateListItem));
+	/* ===创建空闲任务end=== */
+	
+	
+	
 	/* 手动指定第一个运行的任务 */
 	pxCurrentTCB = &Task1TCB;
 	

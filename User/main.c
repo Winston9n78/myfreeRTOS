@@ -17,6 +17,11 @@ TaskHandle_t Task2_Handle;
 StackType_t Task2Stack[TASK2_STACK_SIZE];
 extern TCB_t Task2TCB;
 
+/*定义空闲任务的栈*/
+#define configMINIMAL_STACK_SIZE (( unsigned short ) 128 )
+StackType_t IdleTaskStack[configMINIMAL_STACK_SIZE];
+/*定义空闲任务的任务控制块*/
+TCB_t IdleTaskTCB;
 /*
 *************************************************************
 *全局变量
@@ -113,6 +118,17 @@ void Task2_Entry(void *p_arg)
 }
 
 
+/* 传空闲任务的参数 */
+void vApplicationGetIdleTaskMemory( TCB_t **ppxIdleTaskTCBBuffer,
+																		StackType_t **ppxIdleTaskStackBuffer,
+																		uint32_t *pulIdleTaskStackSize )
+{
+
+	*ppxIdleTaskTCBBuffer=&IdleTaskTCB;
+	*ppxIdleTaskStackBuffer=IdleTaskStack;
+	*pulIdleTaskStackSize=configMINIMAL_STACK_SIZE;
+
+}
 
 ///*定义链表根节点*/
 //struct xLIST List_Test;
