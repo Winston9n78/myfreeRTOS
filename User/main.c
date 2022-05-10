@@ -10,18 +10,19 @@
 TaskHandle_t Task1_Handle;
 //#define TASK1_STACK_SIZE 128
 StackType_t Task1Stack[TASK1_STACK_SIZE];
-extern TCB_t Task1TCB;
+TCB_t Task1TCB;
 
 TaskHandle_t Task2_Handle;
 //#define TASK2_STACK_SIZE 128
 StackType_t Task2Stack[TASK2_STACK_SIZE];
-extern TCB_t Task2TCB;
+TCB_t Task2TCB;
 
 /*定义空闲任务的栈*/
 #define configMINIMAL_STACK_SIZE (( unsigned short ) 128 )
 StackType_t IdleTaskStack[configMINIMAL_STACK_SIZE];
 /*定义空闲任务的任务控制块*/
 TCB_t IdleTaskTCB;
+TaskHandle_t xIdleTaskHandle;
 /*
 *************************************************************
 *全局变量
@@ -74,6 +75,27 @@ int main(){
 	/*将任务添加到就绪列表*/
 	vListInsertEnd( &( pxReadyTasksLists[2]),
 		&(((TCB_t *)(&Task2TCB))->xStateListItem));
+											
+	/* ==创建空闲任务start== */
+//	TCB_t *pxIdleTaskTCBBuffer = NULL;	/*用于指向空闲任务控制块*/
+//	StackType_t *pxIdleTaskStackBuffer = NULL;/*用于空闲任务栈起始地址*/
+//	uint32_t ulIdleTaskStackSize;
+	
+//	vApplicationGetIdleTaskMemory(&pxIdleTaskTCBBuffer,
+//																&pxIdleTaskStackBuffer,
+//																&ulIdleTaskStackSize);
+	
+	xIdleTaskHandle = /* 任务句柄 */
+	xTaskCreateStatic((TaskFunction_t)prvIdleTask,		/*任务入口*/
+										(char *)"IDLE",								/*任务名称，字符串形式*/
+										(uint32_t)configMINIMAL_STACK_SIZE,		/*任务栈大小，单位为字*/
+										(void *)NULL,										/*任务形参*/
+										(StackType_t *)IdleTaskStack,  		/*任务栈起始地址*/
+										(TCB_t *)&IdleTaskTCB); 					/*任务控制块*/
+	/*将任务添加到就绪列表*/
+	vListInsertEnd(&( pxReadyTasksLists[0]),
+										&(((TCB_t *)(&IdleTaskTCB))->xStateListItem));
+	/* ===创建空闲任务end=== */
 	
 	/*启动调度器，开始多任务调度，启动成功则不返回*/
 	vTaskStartScheduler();
@@ -96,12 +118,19 @@ void Task1_Entry(void *p_arg)
 {
 	for(;;)
 	{
+#if 0
 		flag1 = 1;
 		delay(100);
 		flag1 = 0;
 		delay(100);
-		/*任务切换，这里是手动切换*/
+		/*任务切换，这里是手动切换*//*触发PendSv，产生上下文切换*/ 
 		taskYIELD();
+#else
+		flag1 = 1;
+		vTaskDelay(2);		
+		flag1 = 0;
+		vTaskDelay(2);
+#endif
 	}
 }
 
@@ -109,19 +138,29 @@ void Task2_Entry(void *p_arg)
 {
 	for(;;)
 	{
+#if 0
 		flag2 = 1;
 		delay(100);
 		flag2 = 0;
 		delay(100);
 		taskYIELD();
+#else
+		flag2 = 1;
+		vTaskDelay(2);		
+		flag2 = 0;
+		vTaskDelay(2);
+#endif	
 	}
 }
 
+void prvIdleTask(void *p_arg){
+	for(;;) taskYIELD();
+}
 
-/* 传空闲任务的参数 */
+/* 传空闲任务的参数 */ /* 传参之后会出现问题，函数无法调用，暂时没弄清楚原因 */
 void vApplicationGetIdleTaskMemory( TCB_t **ppxIdleTaskTCBBuffer,
 																		StackType_t **ppxIdleTaskStackBuffer,
-																		uint32_t *pulIdleTaskStackSize )
+																		uint32_t *pulIdleTaskStackSize)
 {
 
 	*ppxIdleTaskTCBBuffer=&IdleTaskTCB;

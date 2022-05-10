@@ -9,6 +9,7 @@
 
 #define taskYIELD() portYIEIL()
 
+void vTaskDelay( const TickType_t xTicksToDelay );
 /* 任务句柄 */
 typedef void *TaskHandle_t;
 
@@ -26,6 +27,12 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack,
 void vTaskStartScheduler( void );
 BaseType_t xPortStartScheduler(void);
 void prvStartFirstTask (void);
+
+void vApplicationGetIdleTaskMemory( TCB_t **ppxIdleTaskTCBBuffer,
+																		StackType_t **ppxIdleTaskStackBuffer,
+																		uint32_t *pulIdleTaskStackSize);
+void prvIdleTask(void *p_arg);																
+void xTaskIncrementTick( void );
 																
 /*===进入临界段，不带中断保护版本，不能嵌套==== */								
 #define taskENTER_CRITICAL()	portENTER_CRITICAL()															

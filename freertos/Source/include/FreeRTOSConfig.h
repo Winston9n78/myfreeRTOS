@@ -13,5 +13,8 @@
 #define xPortSysTickHandler SysTick_Handler
 #define vPortSVCHandler SVC_Handler
 
+#define configCPU_CLOCK_HZ (( unsigned long )25000000) 
+#define configTICK_RATE_HZ ((TickType_t ) 100)
+
 #endif 
 /*FREERTOS_CONFIG_H */

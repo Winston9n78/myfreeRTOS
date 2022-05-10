@@ -39,7 +39,6 @@ void vListInsertEnd( List_t * const pxList, ListItem_t * const pxNewListItem ){
 	
 	/*链表节点计数器++*/
 	( pxList->uxNumberOfItems )++;
-	
 }
 
 /*将节点按照升序插入链表*/

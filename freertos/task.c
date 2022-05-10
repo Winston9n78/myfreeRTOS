@@ -6,14 +6,16 @@ TCB_t * pxCurrentTCB;
 
 List_t pxReadyTasksLists[ configMAX_PRIORITIES ];
 
-TCB_t Task1TCB;
-TCB_t Task2TCB;
-extern TCB_t IdleTaskTCB;
-TaskHandle_t xIdleTaskHandle;
+extern TCB_t Task1TCB;
+extern TCB_t Task2TCB;
 
-void vApplicationGetIdleTaskMemory( TCB_t **ppxIdleTaskTCBBuffer,
-																		StackType_t **ppxIdleTaskStackBuffer,
-																		uint32_t *pulIdleTaskStackSize );
+extern TCB_t IdleTaskTCB;
+
+
+
+//void vApplicationGetIdleTaskMemory( TCB_t **ppxIdleTaskTCBBuffer,
+//																		StackType_t **ppxIdleTaskStackBuffer,
+//																		uint32_t *pulIdleTaskStackSize );
 
 static void prvInitialiseNewTask(	TaskFunction_t pxTaskCode,
 																	const char *const pcName,
@@ -109,34 +111,11 @@ void prvInitialiseTaskLists( void )
 
 }
 
-void prvIdleTask(void *p_arg){};
-
 /* 启动调度器 */
 void vTaskStartScheduler( void )
 {
 	
-/* ==创建空闲任务start== */
-	TCB_t *pxIdleTaskTCBBuffer = NULL;	/*用于指向空闲任务控制块*/
-	StackType_t *pxIdleTaskStackBuffer = NULL;/*用于空闲任务栈起始地址*/
-	uint32_t ulIdleTaskStackSize;
-	
-	vApplicationGetIdleTaskMemory(&pxIdleTaskTCBBuffer,
-																&pxIdleTaskStackBuffer,
-																&ulIdleTaskStackSize );
-	
-	xIdleTaskHandle = /* 任务句柄 */
-	xTaskCreateStatic((TaskFunction_t)prvIdleTask,		/*任务入口*/
-										(char *)"IDLE",								/*任务名称，字符串形式*/
-										(uint32_t)ulIdleTaskStackSize ,		/*任务栈大小，单位为字*/
-										(void *)NULL,										/*任务形参*/
-										(StackType_t *)pxIdleTaskStackBuffer,  		/*任务栈起始地址*/
-										(TCB_t *)&pxIdleTaskTCBBuffer ); 					/*任务控制块*/
-	/*将任务添加到就绪列表*/
-	vListInsertEnd( &( pxReadyTasksLists[0] ),
-										&(((TCB_t *)pxIdleTaskTCBBuffer)->xStateListItem));
-	/* ===创建空闲任务end=== */
-	
-	
+
 	
 	/* 手动指定第一个运行的任务 */
 	pxCurrentTCB = &Task1TCB;
@@ -148,8 +127,22 @@ void vTaskStartScheduler( void )
 	}
 }
 
+/* 阻塞延时函数 */
+void vTaskDelay(const TickType_t xTicksToDelay)
+{
+	TCB_t *pxTCB = NULL;
+	/*获取当前任务的TCB*/
+	pxTCB = pxCurrentTCB;
+	
+	/*设置延时时间*/
+	pxTCB->xTicksToDelay = xTicksToDelay;
+	
+	/*任务切换*/
+	taskYIELD(); /*触发PendSv，产生上下文切换*/ 
+}
 
 /* 任务切换 */
+#if 0
 void vTaskSwitchContext ( void )
 {
 	/*两个任务轮流切换*/
@@ -162,6 +155,97 @@ void vTaskSwitchContext ( void )
 	{
 		pxCurrentTCB = &Task1TCB;
 	}
+}
+#else
+void vTaskSwitchContext ( void )
+{
+	/*如果当前任务是空闲任务，那么就去尝试执行任务1或者任务2，
+	看看它们的延时是否结束，如果任务的延时均没有到期，则返回，继续执行空闲任务*/
+	if ( pxCurrentTCB == &IdleTaskTCB )
+	{
+		if ( Task1TCB.xTicksToDelay == 0)
+		{
+			pxCurrentTCB = &Task1TCB;
+		}
+		
+		else if( Task2TCB.xTicksToDelay  == 0)
+		{
+			pxCurrentTCB = &Task2TCB;
+		}		
+		else
+		{
+			return; /*任务延时均没有到期则返回，继续执行空闲任务*/
+		}
+	}
+	
+	else /*当前任务不是空闲任务则会执行到这里*/
+	{
+		/*如果当前任务是任务1或者任务2，检查另外一个任务，
+		如果另外的任务不在延时中，就切换到该任务，
+		否则，判断当前任务是否应该进入延时状态，
+		如果是，就切换到空闲任务，否则不进行任何切换*/
+		if (pxCurrentTCB ==&Task1TCB)
+		{
+			if (Task2TCB.xTicksToDelay ==0)
+			{
+				pxCurrentTCB =&Task2TCB;
+			}
+			else if (pxCurrentTCB->xTicksToDelay != 0)
+			{
+				pxCurrentTCB = &IdleTaskTCB;
+			}
+			else
+			{
+				return; /*返回，不进行切换,因为两个任务都处于延时中*/
+			}		
+		}
+		
+		else if (pxCurrentTCB ==&Task2TCB)
+		{
+			if (Task1TCB.xTicksToDelay ==0)
+			{
+				pxCurrentTCB =&Task1TCB;
+			}
+			else if (pxCurrentTCB->xTicksToDelay != 0)
+			{
+				pxCurrentTCB = &IdleTaskTCB;
+			}
+			else
+			{
+				return; /*返回，不进行切换,因为两个任务都处于延时中*/
+			}
+		
+		}
+		
+	}
+
+}
+
+#endif
+
+extern unsigned int xTickCount;
+void xTaskIncrementTick( void )
+{
+	TCB_t*pxTCB = NULL;
+	BaseType_t i = 0;
+	/*更新系统时基计数器xTickCount，xTickCount是一个在port.c中定义的全局变量*/
+	const TickType_t xConstTickCount = xTickCount + 1;
+	xTickCount = xConstTickCount;
+	
+	/*扫描就绪列表中所有任务的xTicksToDelay，如果不为0，则减1 */
+	for (i=0; i<configMAX_PRIORITIES; i++)
+	{
+	
+		pxTCB = (TCB_t *)listGET_OWNER_OF_HEAD_ENTRY((&pxReadyTasksLists[i]));/* 新加入list.h中 */
+		if (pxTCB->xTicksToDelay > 0)
+		{
+			pxTCB->xTicksToDelay --;
+		}
+	}
+	
+	/*任务切换*/
+	taskYIELD();
+	
 }
 
 __asm void vPortSVCHandler( void )
@@ -183,7 +267,6 @@ __asm void vPortSVCHandler( void )
 		bx r14                
 			
 }
-
 
 __asm void xPortPendSVHandler( void )
 {
@@ -221,5 +304,7 @@ __asm void xPortPendSVHandler( void )
 		nop                                           
 	
 }
+
+
 
 #endif

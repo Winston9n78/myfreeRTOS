@@ -11,6 +11,10 @@ static unsigned long int uxCriticalNesting = 0xaaaaaaaaUL;
 
 #define portVECTACTIVE_MASK 0x000000ffUL
 
+void vPortSetupTimerInterrupt( void );
+
+unsigned int xTickCount;
+
 static void prvTaskExitError ( void )
 {
 	/*函数停止在这里*/
@@ -77,6 +81,9 @@ BaseType_t xPortStartScheduler( void )
 	portNVIC_SYSPRI2_REG |= portNVIC_PENDSV_PRI;
 	portNVIC_SYSPRI2_REG |= portNVIC_SYSTICK_PRI;
 	
+	/* 初始化SysTick */
+	vPortSetupTimerInterrupt();
+	
 	/*启动第一个任务，不再返回*/
 	prvStartFirstTask();
 
@@ -108,6 +115,54 @@ void vPortExitCritical( void )
 		portENABLE_INTERRUPTS();
 	}
 
+}
+
+/*SysTick控制寄存器*/
+#define portNVIC_SYSTICK_CTRL_REG (*((volatile uint32_t *)0xe000e010 ))
+/*SysTick重装载寄存器*/
+#define portNVIC_SYSTICK_LOAD_REG (*((volatile uint32_t *) 0xe000e014 ))
+
+/* SysTick 时钟源选择 */
+#ifndef configSYSTICK_CLOCK_HZ
+	#define configSYSTICK_CLOCK_HZ configCPU_CLOCK_HZ
+	/*确保SysTick的时钟与内核时钟一致*/
+	#define portNVIC_SYSTICK_CLK_BIT ( 1UL<<2UL )
+#else
+	#define portNVIC_SYSTICK_CLK_BIT (0)
+#endif
+
+#define portNVIC_SYSTICK_INT_BIT ( 1UL<<1UL)
+#define portNVIC_SYSTICK_ENABLE_BIT (1UL<<0UL )
+
+void vPortSetupTimerInterrupt( void )
+{
+	/*设置重装载寄存器的值*/
+	portNVIC_SYSTICK_LOAD_REG = ( configSYSTICK_CLOCK_HZ / configTICK_RATE_HZ ) - 1;
+	
+	/*设置系统定时器的时钟等于内核时钟
+	使能SysTick定时器中断
+	使能SysTick定时器*/
+	portNVIC_SYSTICK_CTRL_REG= ( portNVIC_SYSTICK_CLK_BIT |
+																portNVIC_SYSTICK_INT_BIT |
+																portNVIC_SYSTICK_ENABLE_BIT );
+}
+
+/* SysTick中断服务函数 */
+void xPortSysTickHandler( void )
+{
+//	/*关中断*/
+//	vPortRaiseBASEPRI();
+//	/*更新系统时基*/
+//	xTaskIncrementTick();
+//	/*开中断*/
+//	vPortClearBASEPRIFromISR();
+	uint32_t ulReturn;
+	/*进入临界段，临界段可以嵌套*/
+	ulReturn = taskENTER_CRITICAL_FROM_ISR();
+	/*临界段代码*/
+	xTaskIncrementTick();
+	/*退出临界段*/
+	taskEXIT_CRITICAL_FROM_ISR(ulReturn);
 }
 
 

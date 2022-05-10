@@ -90,5 +90,6 @@ UBaseType_t uxListRemove( ListItem_t * const pxItemToRemove );
 	
 /*获取链表第一个节点的OWNER，即TCB */
 #define listGET_OWNER_OF_NEXT_ENTRY(pxTCB, pxList) {List_t * const pxConstList = (pxList); (pxConstList)->pxIndex = (pxConstList)->pxIndex->pxNext; if((void *) (pxConstList)->pxIndex == (void *) &((pxConstList)->xListEnd)) (pxConstList)->pxIndex = (pxConstList)->pxIndex->pxNext; (pxTCB) = (pxConstList)->pxIndex->pvOwner;}
+#define listGET_OWNER_OF_HEAD_ENTRY( pxList )  ( (&( ( pxList )->xListEnd ))->pxNext->pvOwner )	
 	
 #endif
