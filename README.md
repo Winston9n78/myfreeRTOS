@@ -21,3 +21,15 @@
 - 实验现象如图，两个任务看上去在并行执行
 
 ![实验二](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil2.png?raw=true)
+
+
+
+## 实验第三部分
+
+- 加入优先级机制
+
+
+
+## 实验第四部分
+
+- 同一优先级多任务的时间片管理机制
