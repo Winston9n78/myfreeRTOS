@@ -7,6 +7,7 @@
 
 - 实现任务的轮流切换，通过SV中断与PendSV中断进行两个任务的调度。是人为设置的轮流切换，还没有加上优先级功能。
 - 使用keil对Cortex-M进行仿真，可以查看各种寄存器的状态，曲线就是直线任务的函数在反转标志位
+
 ![实验一](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil%E6%88%AA%E5%9B%BE.png?raw=true)
 
 
@@ -18,4 +19,5 @@
 - 使用systick中断计算阻塞时间
 - 暂时没有优先级，在中断中切换任务
 - 实验现象如图，两个任务看上去在并行执行
-![实验一](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil2.png?raw=true)
+
+![实验二](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil2.png?raw=true)
