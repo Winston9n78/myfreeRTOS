@@ -18,3 +18,4 @@
 - 使用systick中断计算阻塞时间
 - 暂时没有优先级，在中断中切换任务
 - 实验现象如图，两个任务看上去在并行执行
+![实验一](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil2.png?raw=true)
