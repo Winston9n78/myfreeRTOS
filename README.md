@@ -5,7 +5,7 @@
 
 ## 实验第一部分
 
-- 实现任务的轮流切换，通过SV中断与PendSV中断进行两个任务的调度。是人为设置的轮流切换，还没有加上优先级功能。
+- 实现任务的轮流切换，通过**SV中断**与**PendSV中断**进行两个任务的调度。是人为设置的轮流切换，还没有加上优先级功能。
 - 使用keil对Cortex-M进行仿真，可以查看各种寄存器的状态，曲线就是直线任务的函数在反转标志位
 
 ![实验一](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil%E6%88%AA%E5%9B%BE.png?raw=true)
@@ -22,13 +22,17 @@
 
 ![实验二](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil2.png?raw=true)
 
+待解决bug
+
+- [ ] 空闲任务初始化函数放在task.c中时，任务控制块的栈空间无法分配，寄存器状态显示不可读？通过单步调试发现问题，目前放在main里
+
 
 
 ## 实验第三部分
 
 - 加入优先级机制
 
-- 通过更新pxCurrentTCB指向改变运行任务
+- 通过更新**pxCurrentTCB**指向改变运行任务
 
 - 注重理解
 
@@ -36,7 +40,7 @@
   taskSELECT_HIGHEST_PRIORITY_TASK();
   ```
 
-  切换pxCurrentTCB部分部分的逻辑
+  切换**pxCurrentTCB**部分部分的逻辑
 
 - 注意
 
