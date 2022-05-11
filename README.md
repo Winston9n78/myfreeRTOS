@@ -40,7 +40,7 @@
   taskSELECT_HIGHEST_PRIORITY_TASK();
   ```
 
-  切换**pxCurrentTCB**部分部分的逻辑
+  切换**pxCurrentTCB**部分的逻辑
 
 - 注意
 
