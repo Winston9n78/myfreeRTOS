@@ -25,9 +25,20 @@ typedef unsigned long UBaseType_t;
 #define portNVIC_PENDSVSET_BIT ( 1UL<<28UL )
 #define portSY_FULL_READ_WRITE (15)
 
+/* 优先级相关 */
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
+
+#define portRECORD_READY_PRIORITY( uxPriority,uxReadyPriorities ) \
+	( uxReadyPriorities ) |=(1UL<< ( uxPriority ) )
+
+#define portRESET_READY_PRIORITY( uxPriority, uxReadyPriorities ) \
+	( uxReadyPriorities ) &= ~( 1UL<< ( uxPriority ))
+
+#define portGET_HIGHEST_PRIORITY( uxTopPriority, uxReadyPriorities ) \
+	uxTopPriority = (31UL - ( uint32_t ) __clz(( uxReadyPriorities)))
+
 /*触发PendSv，产生上下文切换*/ 
 #define portYIEIL() {portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT; __dsb( portSY_FULL_READ_WRITE ); __isb( portSY_FULL_READ_WRITE);}
-
 
 #if( configUSE_16_BIT_TICKS == 1 ) /**/
 typedef uint16_t TickType_t;
@@ -125,5 +136,7 @@ static portFORCE_INLINE void vPortSetBASEPRI(uint32_t ulBASEPRI )
 		msr basepri,ulBASEPRI
 	}
 }
+
+
 
 #endif/*PORTMACRO_H*/

@@ -1,7 +1,7 @@
 # myfreeRTOS
 - 制作一个RTOS内核，主要参考野火的《FreeRTOS内核实现与应用开发》
-
 - 书里代码有些细节没有给出（没什么大碍），在代码实现里已经加上，丰富了一下注释
+- 主要是想学习和加深对内核的理解
 
 ## 实验第一部分
 
@@ -28,8 +28,34 @@
 
 - 加入优先级机制
 
+- 通过更新pxCurrentTCB指向改变运行任务
+
+- 注重理解
+
+  ```C
+  taskSELECT_HIGHEST_PRIORITY_TASK();
+  ```
+
+  切换pxCurrentTCB部分部分的逻辑
+
+- 注意
+
+  ```c
+  taskRESET_READY_PRIORITY( pxTCB一>uxPriority );
+  ```
+
+  目前是将阻塞任务优先级位图标置0，实际上需要从就绪列表去除，在下一章引入延时列表时实现
+
+![实验三](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil3.png?raw=true)
+
 
 
 ## 实验第四部分
+
+- 引入任务延时列表
+
+
+
+## 实验第五部分
 
 - 同一优先级多任务的时间片管理机制

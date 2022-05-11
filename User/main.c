@@ -57,24 +57,26 @@ int main(){
 											(char *)"Task1",								/*任务名称，字符串形式*/
 											(uint32_t)TASK1_STACK_SIZE ,		/*任务栈大小，单位为字*/
 											(void *)NULL,										/*任务形参*/
+											(UBaseType_t)1,
 											(StackType_t *)Task1Stack,  		/*任务栈起始地址*/
 											(TCB_t *)&Task1TCB ); 					/*任务控制块*/
 	
 	/*将任务添加到就绪列表*/
-	vListInsertEnd( &( pxReadyTasksLists[1] ),
-		&(((TCB_t *)(&Task1TCB))->xStateListItem ) );
+//	vListInsertEnd( &( pxReadyTasksLists[1] ),
+//		&(((TCB_t *)(&Task1TCB))->xStateListItem ) );
 	
 	Task2_Handle = /* 任务句柄 */
 		xTaskCreateStatic((TaskFunction_t)Task2_Entry,		/*任务入口*/
 											(char *)"Task2",								/*任务名称，字符串形式*/
 											(uint32_t)TASK2_STACK_SIZE ,		/*任务栈大小，单位为字*/
 											(void *)NULL,										/*任务形参*/
+											(UBaseType_t)2,
 											(StackType_t *)Task2Stack,  		/*任务栈起始地址*/
 											(TCB_t *)&Task2TCB ); 					/*任务控制块*/
 	
 	/*将任务添加到就绪列表*/
-	vListInsertEnd( &( pxReadyTasksLists[2]),
-		&(((TCB_t *)(&Task2TCB))->xStateListItem));
+//	vListInsertEnd( &( pxReadyTasksLists[2]),
+//		&(((TCB_t *)(&Task2TCB))->xStateListItem));
 											
 	/* ==创建空闲任务start== */
 //	TCB_t *pxIdleTaskTCBBuffer = NULL;	/*用于指向空闲任务控制块*/
@@ -90,11 +92,12 @@ int main(){
 										(char *)"IDLE",								/*任务名称，字符串形式*/
 										(uint32_t)configMINIMAL_STACK_SIZE,		/*任务栈大小，单位为字*/
 										(void *)NULL,										/*任务形参*/
+										(UBaseType_t)0,
 										(StackType_t *)IdleTaskStack,  		/*任务栈起始地址*/
 										(TCB_t *)&IdleTaskTCB); 					/*任务控制块*/
 	/*将任务添加到就绪列表*/
-	vListInsertEnd(&( pxReadyTasksLists[0]),
-										&(((TCB_t *)(&IdleTaskTCB))->xStateListItem));
+//	vListInsertEnd(&( pxReadyTasksLists[0]),
+//										&(((TCB_t *)(&IdleTaskTCB))->xStateListItem));
 	/* ===创建空闲任务end=== */
 	
 	/*启动调度器，开始多任务调度，启动成功则不返回*/

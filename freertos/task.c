@@ -12,7 +12,72 @@ extern TCB_t Task2TCB;
 extern TCB_t IdleTaskTCB;
 
 
+/*定义uxTopReadyPriority，在task.c中定义*/
+static volatile UBaseType_t uxTopReadyPriority = tskIDLE_PRIORITY;
 
+/*查找最高优先级的就绪任务（通用方法）*/
+#if ( configUSE_PORT_OPTIMISED_TASK_SELECTION == 0 )
+
+	/*uxTopReadyPriority存储的是就绪任务的最高优先级*/
+	#define taskRECORD_READY_PRIORITY ( uxPriority ) \
+	{ \
+		if( ( uxPriority ) >uxTopReadyPriority )\
+			{ \
+				uxTopReadyPriority = ( uxPriority ); \
+			} \
+	} /*taskRECORD_READY_PRIORITY */
+
+	/*---------------------------------------------------------------*/
+	#define taskSELECT_HIGHEST_PRIORITY_TASK() \
+	{ \
+		UBaseType_t uxTopPriority = uxTopReadyPriority; \
+		/*寻找包含就绪任务的最高优先级的队列*/ \
+		while( listLIST_IS_EMPTY( &( pxReadyTasksLists[ uxTopPriority ] ) )) \
+		{ \
+			--uxTopPriority; \
+		} \
+		/*获取优先级最高的就绪任务的TCB，然后更新到pxCurrentTCB*/ \
+		listGET_OWNER_OF_NEXT_ENTRY(pxCurrentTCB, &(pxReadyTasksLists[ uxTopPriority ])); \
+		/*更新uxTopReadyPriority */ \
+		uxTopReadyPriority = uxTopPriority; \
+	}/* taskSELECT_HIGHEST_PRIORITY_TASK */
+
+	/*---------------------------------------------------------------*/
+/*这两个宏定义只有在选择优化方法时才用，这里定义为空*/
+#define taskRESET_READY_PRIORITY( uxPriority )
+#define portRESET_READY_PRIORITY( uxPriority,uxTopReadyPriority )	
+	
+/*查找最高优先级的就绪任务（根据处理器架构优化后的方法）*/
+#else /* configUSE_PORT_OPTIMISED_TASK_SELECTION */
+	#define taskRECORD_READY_PRIORITY(uxPriority ) \
+						portRECORD_READY_PRIORITY( uxPriority, uxTopReadyPriority )
+/*---------------------------------------------------------------*/
+#define taskSELECT_HIGHEST_PRIORITY_TASK() { UBaseType_t uxTopPriority; /*寻找最高优先级*/portGET_HIGHEST_PRIORITY ( uxTopPriority,uxTopReadyPriority ); /*获取优先级最高的就绪任务的TCB，然后更新到pxCurrentTCB */ listGET_OWNER_OF_NEXT_ENTRY( pxCurrentTCB,&( pxReadyTasksLists[ uxTopPriority ] ));}	/* taskSELECT_HIGHEST_PRIORITY_TASK()*/
+	
+	/*---------------------------------------------------------------*/
+#if 0
+	#define taskRESET_READY_PRIORITY( uxPriority ) \
+	{	\
+		if(listCURRENT_LIST_LENGTH(&(pxReadyTasksLists[( uxPriority)]))==(UBaseType_t)) \
+		{ \
+			portRESET_READY_PRIORITY( ( uxPriority ), ( uxTopReadyPriority ) ); \
+		} \
+	}
+
+#else
+
+	#define taskRESET_READY_PRIORITY(uxPriority) { portRESET_READY_PRIORITY((uxPriority ), (uxTopReadyPriority));}
+
+#endif
+
+
+/*将任务添加到就绪列表*/
+#define prvAddTaskToReadyList( pxTCB ) \
+	taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority ); \
+	vListInsertEnd( &( pxReadyTasksLists[ ( pxTCB )->uxPriority ] ), \
+	&( ( pxTCB )->xStateListItem ) );
+
+static unsigned int uxCurrentNumberOfTasks;
 //void vApplicationGetIdleTaskMemory( TCB_t **ppxIdleTaskTCBBuffer,
 //																		StackType_t **ppxIdleTaskStackBuffer,
 //																		uint32_t *pulIdleTaskStackSize );
@@ -21,6 +86,8 @@ static void prvInitialiseNewTask(	TaskFunction_t pxTaskCode,
 																	const char *const pcName,
 																	const uint32_t ulStackDepth,
 																	void * const pvParameters,
+																	/*任务优先级，数值越大，优先级越高*/
+																	UBaseType_t uxPriority,
 																	TaskHandle_t *const pxCreatedTask,
 																	TCB_t *pxNewTCB )
 {
@@ -57,6 +124,15 @@ static void prvInitialiseNewTask(	TaskFunction_t pxTaskCode,
 																									pxTaskCode,
 																									pvParameters);
 	
+	/*初始化优先级*/
+	if ( uxPriority >= ( UBaseType_t ) configMAX_PRIORITIES )
+	{
+		uxPriority = ( UBaseType_t ) configMAX_PRIORITIES - ( UBaseType_t ) 1U;
+	}
+	pxNewTCB->uxPriority = uxPriority;
+	/*初始化任务栈*/
+	pxNewTCB->pxTopOfStack = pxPortInitialiseStack( pxTopOfStack,pxTaskCode,pvParameters );
+	
 	if( ( void * ) pxCreatedTask != NULL)
 	{
 		*pxCreatedTask = (TaskHandle_t ) pxNewTCB;
@@ -70,6 +146,8 @@ TaskHandle_t xTaskCreateStatic(TaskFunction_t pxTaskCode,
 																const char *const pcName,
 																const uint32_t ulStackDepth,
 															  void * const pvParameters,
+																/*任务优先级，数值越大，优先级越高*/
+																UBaseType_t uxPriority,
 																StackType_t * const puxStackBuffer,
 																TCB_t * const pxTaskBuffer )
 {
@@ -86,8 +164,11 @@ TaskHandle_t xTaskCreateStatic(TaskFunction_t pxTaskCode,
 													pcName,			 		/*任务名称，字符串形式*/
 													ulStackDepth,		/*任务栈大小，单位为字*/
 													pvParameters,		/*任务形参*/
+													uxPriority,
 													&xReturn,		 		/*任务句柄*/
 													pxNewTCB);	 		/*任务栈起始地址*/
+		
+		prvAddNewTaskToReadyList(pxNewTCB);
 	}
 	else
 	{
@@ -115,10 +196,8 @@ void prvInitialiseTaskLists( void )
 void vTaskStartScheduler( void )
 {
 	
-
-	
 	/* 手动指定第一个运行的任务 */
-	pxCurrentTCB = &Task1TCB;
+	//pxCurrentTCB = &Task1TCB;
 	
 	/* 启动调度器 */
 	if ( xPortStartScheduler() != pdFALSE )
@@ -137,25 +216,32 @@ void vTaskDelay(const TickType_t xTicksToDelay)
 	/*设置延时时间*/
 	pxTCB->xTicksToDelay = xTicksToDelay;
 	
+	/*将任务从就绪列表中移除*/
+	// uxListRemove( &( pxTCB->xStateListItem ));
+	taskRESET_READY_PRIORITY( pxTCB->uxPriority );
+	
 	/*任务切换*/
 	taskYIELD(); /*触发PendSv，产生上下文切换*/ 
 }
 
 /* 任务切换 */
-#if 0
+#if 1
 void vTaskSwitchContext ( void )
 {
 	/*两个任务轮流切换*/
-	if ( pxCurrentTCB == &Task1TCB )
-	{
-		pxCurrentTCB = &Task2TCB;
-	}
-	
-	else
-	{
-		pxCurrentTCB = &Task1TCB;
-	}
+//	if ( pxCurrentTCB == &Task1TCB )
+//	{
+//		pxCurrentTCB = &Task2TCB;
+//	}
+//	
+//	else
+//	{
+//		pxCurrentTCB = &Task1TCB;
+//	}
+	/*获取优先级最高的就绪任务的TCB，然后更新到pxCurrentTCB */
+	taskSELECT_HIGHEST_PRIORITY_TASK();
 }
+
 #else
 void vTaskSwitchContext ( void )
 {
@@ -240,6 +326,12 @@ void xTaskIncrementTick( void )
 		if (pxTCB->xTicksToDelay > 0)
 		{
 			pxTCB->xTicksToDelay --;
+			
+			/*延时时间到，将任务就绪*/
+			if ( pxTCB->xTicksToDelay ==0 )
+			{
+				taskRECORD_READY_PRIORITY( pxTCB->uxPriority );
+			}
 		}
 	}
 	
@@ -305,6 +397,42 @@ __asm void xPortPendSVHandler( void )
 	
 }
 
+#endif
 
+
+	
+static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB )
+{
+	/*进入临界段*/
+	taskENTER_CRITICAL();
+	{
+		/*全局任务定时器加1操作*/
+		uxCurrentNumberOfTasks++;
+		/*如果pxCurrentTCB为空，则将pxCurrentTCB指向新创建的任务*/
+		if ( pxCurrentTCB == NULL )
+		{
+			pxCurrentTCB = pxNewTCB;
+			/*如果是第一次创建任务，则需要初始化任务的相关列表*/
+			if ( uxCurrentNumberOfTasks == ( UBaseType_t ) 1 )
+			{
+				/*初始化任务的相关列表*/
+				prvInitialiseTaskLists();
+			}
+		}	
+		else/*如果pxCurrentTCB不为空则根据任务的优先级将pxCurrentTCB指向最高优先级任务的TCB */
+		{
+			if ( pxCurrentTCB->uxPriority <= pxNewTCB->uxPriority )
+			{
+				pxCurrentTCB = pxNewTCB;
+			}
+		}
+		
+		/*将任务添加到就绪列表*/
+		prvAddTaskToReadyList( pxNewTCB );
+		
+	}
+	/*退出临界段*/
+	taskEXIT_CRITICAL();
+}
 
 #endif

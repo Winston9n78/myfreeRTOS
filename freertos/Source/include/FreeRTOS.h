@@ -23,6 +23,8 @@ typedef struct tskTaskControlBlock
 	char pcTaskName[ configMAX_TASK_NAME_LEN ];
 	
 	TickType_t xTicksToDelay; /*ÓÃÓÚ×èÈûÑÓÊ±*/
+	
+	UBaseType_t uxPriority;
 }tskTCB;
 typedef tskTCB TCB_t;
 

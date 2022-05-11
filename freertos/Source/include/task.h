@@ -9,6 +9,10 @@
 
 #define taskYIELD() portYIEIL()
 
+/*空闲任务优先级宏定义，在task.h中定义*/
+#define tskIDLE_PRIORITY ((UBaseType_t ) 0U )
+
+
 void vTaskDelay( const TickType_t xTicksToDelay );
 /* 任务句柄 */
 typedef void *TaskHandle_t;
@@ -17,9 +21,11 @@ TaskHandle_t xTaskCreateStatic(TaskFunction_t pxTaskCode,
 																const char *const pcName,
 																const uint32_t ulStackDepth,
 															  void * const pvParameters,
+																/*任务优先级，数值越大，优先级越高*/
+																UBaseType_t uxPriority,
 																StackType_t * const puxStackBuffer,
 																TCB_t * const pxTaskBuffer );
-																
+static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB );																
 void prvInitialiseTaskLists( void );
 StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack,
 																		TaskFunction_t pxCode,
@@ -33,7 +39,9 @@ void vApplicationGetIdleTaskMemory( TCB_t **ppxIdleTaskTCBBuffer,
 																		uint32_t *pulIdleTaskStackSize);
 void prvIdleTask(void *p_arg);																
 void xTaskIncrementTick( void );
-																
+
+void vPortEnterCritical( void );
+void vPortExitCritical( void );															
 /*===进入临界段，不带中断保护版本，不能嵌套==== */								
 #define taskENTER_CRITICAL()	portENTER_CRITICAL()															
 /*===进入临界段，带中断保护版本，可以嵌套==== */		
