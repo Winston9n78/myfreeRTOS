@@ -7,7 +7,7 @@
 ## 实验第一部分
 
 - 实现任务的轮流切换，通过**SV中断**与**PendSV中断**进行两个任务的调度。是人为设置的轮流切换，还没有加上优先级功能。
-- 使用keil对Cortex-M进行仿真，可以查看各种寄存器的状态，曲线就是直线任务的函数在反转标志位
+- 使用keil对Cortex-M进行仿真，可以查看各种寄存器的状态，方波就是任务函数在反转标志位
 
 ![实验一](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil%E6%88%AA%E5%9B%BE.png?raw=true)
 
