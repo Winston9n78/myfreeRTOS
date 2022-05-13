@@ -67,3 +67,11 @@
 ## 实验第五部分
 
 - 同一优先级多任务的时间片管理机制
+
+- 在之前优先级中已经实现，这个实验主要去理解原理
+
+  
+
+![实验五](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil5-1.png?raw=true)
+
+![实验五](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil5-2.png?raw=true)
