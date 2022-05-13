@@ -17,6 +17,11 @@ TaskHandle_t Task2_Handle;
 StackType_t Task2Stack[TASK2_STACK_SIZE];
 TCB_t Task2TCB;
 
+TaskHandle_t Task3_Handle;
+//#define TASK2_STACK_SIZE 128
+StackType_t Task3Stack[TASK3_STACK_SIZE];
+TCB_t Task3TCB;
+
 /*定义空闲任务的栈*/
 #define configMINIMAL_STACK_SIZE (( unsigned short ) 128 )
 StackType_t IdleTaskStack[configMINIMAL_STACK_SIZE];
@@ -30,6 +35,7 @@ TaskHandle_t xIdleTaskHandle;
 */
 portCHAR flag1;
 portCHAR flag2;
+portCHAR flag3;
 
 extern List_t pxReadyTasksLists[ configMAX_PRIORITIES ];
 /*
@@ -40,7 +46,7 @@ extern List_t pxReadyTasksLists[ configMAX_PRIORITIES ];
 void delay (uint32_t count);
 void Task1_Entry( void *p_arg );
 void Task2_Entry( void *p_arg );
-
+void Task3_Entry( void *p_arg );
 /*
 *************************************************************
 *main函数
@@ -57,7 +63,7 @@ int main(){
 											(char *)"Task1",								/*任务名称，字符串形式*/
 											(uint32_t)TASK1_STACK_SIZE ,		/*任务栈大小，单位为字*/
 											(void *)NULL,										/*任务形参*/
-											(UBaseType_t)1,
+											(UBaseType_t)2,
 											(StackType_t *)Task1Stack,  		/*任务栈起始地址*/
 											(TCB_t *)&Task1TCB ); 					/*任务控制块*/
 	
@@ -73,6 +79,15 @@ int main(){
 											(UBaseType_t)2,
 											(StackType_t *)Task2Stack,  		/*任务栈起始地址*/
 											(TCB_t *)&Task2TCB ); 					/*任务控制块*/
+											
+	Task3_Handle = /* 任务句柄 */
+		xTaskCreateStatic((TaskFunction_t)Task3_Entry,		/*任务入口*/
+											(char *)"Task3",								/*任务名称，字符串形式*/
+											(uint32_t)TASK3_STACK_SIZE ,		/*任务栈大小，单位为字*/
+											(void *)NULL,										/*任务形参*/
+											(UBaseType_t)3,
+											(StackType_t *)Task3Stack,  		/*任务栈起始地址*/
+											(TCB_t *)&Task3TCB ); 					/*任务控制块*/
 	
 	/*将任务添加到就绪列表*/
 //	vListInsertEnd( &( pxReadyTasksLists[2]),
@@ -121,13 +136,13 @@ void Task1_Entry(void *p_arg)
 {
 	for(;;)
 	{
-#if 0
+#if 1
 		flag1 = 1;
 		delay(100);
 		flag1 = 0;
 		delay(100);
 		/*任务切换，这里是手动切换*//*触发PendSv，产生上下文切换*/ 
-		taskYIELD();
+		//taskYIELD();
 #else
 		flag1 = 1;
 		vTaskDelay(2);		
@@ -141,6 +156,25 @@ void Task2_Entry(void *p_arg)
 {
 	for(;;)
 	{
+#if 1
+		flag2 = 1;
+		delay(100);
+		flag2 = 0;
+		delay(100);
+		//taskYIELD();
+#else
+		flag2 = 1;
+		vTaskDelay(2);		
+		flag2 = 0;
+		vTaskDelay(2);
+#endif	
+	}
+}
+
+void Task3_Entry(void *p_arg)
+{
+	for(;;)
+	{
 #if 0
 		flag2 = 1;
 		delay(100);
@@ -148,10 +182,10 @@ void Task2_Entry(void *p_arg)
 		delay(100);
 		taskYIELD();
 #else
-		flag2 = 1;
-		vTaskDelay(2);		
-		flag2 = 0;
-		vTaskDelay(2);
+		flag3 = 1;
+		vTaskDelay(1);		
+		flag3 = 0;
+		vTaskDelay(1);
 #endif	
 	}
 }

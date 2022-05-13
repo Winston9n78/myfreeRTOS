@@ -12,6 +12,9 @@ extern StackType_t Task1Stack[TASK1_STACK_SIZE];
 #define TASK2_STACK_SIZE 128
 extern StackType_t Task2Stack[TASK2_STACK_SIZE];
 
+#define TASK3_STACK_SIZE 128
+extern StackType_t Task3Stack[TASK3_STACK_SIZE];
+
 /*任务控制块声明*/
 typedef struct tskTaskControlBlock
 {

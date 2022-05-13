@@ -8,7 +8,7 @@ List_t pxReadyTasksLists[ configMAX_PRIORITIES ];
 
 extern TCB_t Task1TCB;
 extern TCB_t Task2TCB;
-
+extern TCB_t Task3TCB;
 extern TCB_t IdleTaskTCB;
 
 extern unsigned int xTickCount;
