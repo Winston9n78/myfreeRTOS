@@ -60,8 +60,9 @@
 ## 实验第四部分
 
 - 引入任务延时列表
+- 实验现象还是和以前一样，不过在阻塞延时时将任务切换到延时列表中
 
-
+![实验四](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil4.png?raw=true)
 
 ## 实验第五部分
 

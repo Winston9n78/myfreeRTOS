@@ -41,7 +41,8 @@ void prvIdleTask(void *p_arg);
 void xTaskIncrementTick( void );
 
 void vPortEnterCritical( void );
-void vPortExitCritical( void );															
+void vPortExitCritical( void );	
+static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait );
 /*===进入临界段，不带中断保护版本，不能嵌套==== */								
 #define taskENTER_CRITICAL()	portENTER_CRITICAL()															
 /*===进入临界段，带中断保护版本，可以嵌套==== */		
