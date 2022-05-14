@@ -4,6 +4,12 @@
 - 主要是想学习和加深对内核的理解
 - 双向链表与ARM是基础
 
+
+
+## 知识准备
+
+
+
 ## 实验第一部分
 
 - 实现任务的轮流切换，通过**SV中断**与**PendSV中断**进行两个任务的调度。是人为设置的轮流切换，还没有加上优先级功能。
@@ -75,3 +81,7 @@
 ![实验五](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil5-1.png?raw=true)
 
 ![实验五](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil5-2.png?raw=true)
+
+
+
+## RTOS内核应用开发学习笔记
