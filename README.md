@@ -32,14 +32,24 @@ RTOS将任务连接起来的基础数据结构是双向链表。双向链表中�
 
 ### ARM
 
-需要用到的Cortex-M的内容。中断向量，中断屏蔽，SV中断，PendSV中断
+需要用到的Cortex-M3的内容:R0-R15寄存器组。
+
+SV中断:svc 0
+
+PendSV中断:
+
+中断向量
+
+中断屏蔽:basepri
+
+
 
 ## 实验第一部分
 
 - 实现任务的轮流切换，通过**SV中断**与**PendSV中断**进行两个任务的调度。是人为设置的轮流切换，还没有加上优先级功能。
 - 使用keil对Cortex-M进行仿真，可以查看各种寄存器的状态，方波就是任务函数在反转标志位
 
-![实验一](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil%E6%88%AA%E5%9B%BE.png?raw=true)
+![实验一](https://github.com/Winston9n78/myfreeRTOS/blob/main/README.assets/keil1.png?raw=true)
 
 
 
